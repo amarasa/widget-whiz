@@ -210,49 +210,11 @@ class Widget_Whiz_Admin
 
         $name = sanitize_text_field($_POST['name']);
         $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
-        $sidebars = get_option('widget_whiz_sidebars', array());
 
         if (($key = array_search($name, $deleted_sidebars)) !== false) {
             unset($deleted_sidebars[$key]);
             update_option('widget_whiz_deleted_sidebars', $deleted_sidebars);
-
-            // Add the reactivated sidebar back to the active sidebars
-            global $wp_registered_sidebars;
-            foreach ($wp_registered_sidebars as $sidebar_id => $sidebar) {
-                if ($sidebar['name'] == $name) {
-                    $sidebars[] = array(
-                        'name' => $sidebar['name'],
-                        'description' => $sidebar['description'],
-                    );
-                    break;
-                }
-            }
-            update_option('widget_whiz_sidebars', $sidebars);
-
-            // Register the sidebar immediately
-            register_sidebar(array(
-                'id' => sanitize_title($name),
-                'name' => $name,
-                'description' => $sidebar['description'],
-                'before_widget' => '<div id="%1$s" class="widget %2$s">',
-                'after_widget' => '</div>',
-                'before_title' => '<h6 class="side-title">',
-                'after_title' => '</h6>',
-            ));
-
-            // Send the updated sidebar list to be rendered in the response
-            ob_start();
-            foreach ($sidebars as $key => $sidebar) {
-                echo '<tr valign="top" data-key="' . esc_attr($key) . '">';
-                echo '<th scope="row">' . esc_html($sidebar['name']) . '</th>';
-                echo '<td><textarea name="widget_whiz_sidebars[' . esc_attr($key) . '][description]">' . esc_textarea($sidebar['description']) . '</textarea></td>';
-                echo '<td><input type="hidden" name="widget_whiz_sidebars[' . esc_attr($key) . '][name]" value="' . esc_attr($sidebar['name']) . '" />';
-                echo '<button type="button" class="button button-secondary widget-whiz-delete-button">Delete</button></td>';
-                echo '</tr>';
-            }
-            $sidebars_html = ob_get_clean();
-
-            wp_send_json_success(array('sidebars_html' => $sidebars_html));
+            wp_send_json_success();
         } else {
             wp_send_json_error();
         }
