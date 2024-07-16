@@ -240,7 +240,19 @@ class Widget_Whiz_Admin
                 'after_title' => '</h6>',
             ));
 
-            wp_send_json_success();
+            // Send the updated sidebar list to be rendered in the response
+            ob_start();
+            foreach ($sidebars as $key => $sidebar) {
+                echo '<tr valign="top" data-key="' . esc_attr($key) . '">';
+                echo '<th scope="row">' . esc_html($sidebar['name']) . '</th>';
+                echo '<td><textarea name="widget_whiz_sidebars[' . esc_attr($key) . '][description]">' . esc_textarea($sidebar['description']) . '</textarea></td>';
+                echo '<td><input type="hidden" name="widget_whiz_sidebars[' . esc_attr($key) . '][name]" value="' . esc_attr($sidebar['name']) . '" />';
+                echo '<button type="button" class="button button-secondary widget-whiz-delete-button">Delete</button></td>';
+                echo '</tr>';
+            }
+            $sidebars_html = ob_get_clean();
+
+            wp_send_json_success(array('sidebars_html' => $sidebars_html));
         } else {
             wp_send_json_error();
         }

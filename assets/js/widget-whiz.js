@@ -38,6 +38,7 @@ jQuery(document).ready(function ($) {
 				success: function (response) {
 					if (response.success) {
 						$row.remove();
+						location.reload();
 					} else {
 						alert("Failed to delete sidebar.");
 					}
@@ -61,6 +62,9 @@ jQuery(document).ready(function ($) {
 			},
 			success: function (response) {
 				if (response.success) {
+					$("#widget-whiz-sidebars-list").html(
+						response.data.sidebars_html
+					);
 					location.reload();
 				} else {
 					alert("Failed to reactivate sidebar.");
