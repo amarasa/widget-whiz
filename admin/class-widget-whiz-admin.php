@@ -46,23 +46,9 @@ class Widget_Whiz_Admin
 
     public function create_admin_page()
     {
-        global $wp_registered_sidebars;
         $sidebars = get_option('widget_whiz_sidebars', array());
+        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
 
-        // Check for existing sidebars that haven't been imported yet.
-        $unimported_sidebars = array();
-        foreach ($wp_registered_sidebars as $sidebar_id => $sidebar) {
-            $exists = false;
-            foreach ($sidebars as $widget_whiz_sidebar) {
-                if ($widget_whiz_sidebar['name'] == $sidebar['name']) {
-                    $exists = true;
-                    break;
-                }
-            }
-            if (!$exists) {
-                $unimported_sidebars[] = $sidebar;
-            }
-        }
 ?>
         <div class="wrap">
             <h1>Widget Whiz</h1>
@@ -88,18 +74,6 @@ class Widget_Whiz_Admin
                 <?php submit_button('Add Sidebar'); ?>
             </form>
 
-            <?php if (!empty($unimported_sidebars)) : ?>
-                <h2>Import Existing Sidebars</h2>
-                <form id="widget-whiz-import-form">
-                    <ul>
-                        <?php foreach ($unimported_sidebars as $sidebar) : ?>
-                            <li><?php echo esc_html($sidebar['name']); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <button type="button" id="widget-whiz-import-button" class="button button-primary">Import Sidebars</button>
-                </form>
-            <?php endif; ?>
-
             <h2>Existing Sidebars</h2>
             <form id="widget-whiz-sidebars-form" method="post" action="options.php">
                 <?php settings_fields('widget_whiz_group'); ?>
@@ -119,6 +93,20 @@ class Widget_Whiz_Admin
                 </table>
                 <?php submit_button('Save Changes'); ?>
             </form>
+
+            <?php if (!empty($deleted_sidebars)) : ?>
+                <h2>Inactive Sidebars</h2>
+                <form id="widget-whiz-reactivate-form">
+                    <ul>
+                        <?php foreach ($deleted_sidebars as $sidebar) : ?>
+                            <li>
+                                <?php echo esc_html($sidebar); ?>
+                                <button type="button" class="button button-secondary widget-whiz-reactivate-button" data-name="<?php echo esc_attr($sidebar); ?>">Reactivate</button>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </form>
+            <?php endif; ?>
         </div>
 <?php
     }

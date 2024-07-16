@@ -5,7 +5,6 @@ Widget Whiz is a WordPress plugin that allows you to easily manage sidebars dire
 ## Features
 
 -   Add new sidebars directly from the WordPress dashboard.
--   Import existing sidebars that are registered in the theme.
 -   Delete sidebars and prevent them from being re-registered.
 -   Reactivate deleted sidebars, making them available for use again.
 
@@ -23,24 +22,12 @@ Widget Whiz is a WordPress plugin that allows you to easily manage sidebars dire
 2. Under the "Add New Sidebar" section, enter the name and description of the new sidebar.
 3. Click the "Add Sidebar" button.
 
-### Importing Existing Sidebars
-
-1. Go to `Appearance > Widget Whiz`.
-2. If there are any existing sidebars registered in your theme, they will be listed under the "Import Existing Sidebars" section.
-3. Click the "Import Sidebars" button to import them.
-
 ### Deleting a Sidebar
 
 1. Go to `Appearance > Widget Whiz`.
 2. Under the "Existing Sidebars" section, find the sidebar you want to delete.
 3. Click the "Delete" button next to the sidebar.
 4. Confirm the deletion by typing the name of the sidebar.
-
-### Reactivating a Sidebar
-
-1. Go to `Appearance > Widget Whiz`.
-2. Under the "Inactive Sidebars" section, find the sidebar you want to reactivate.
-3. Click the "Reactivate" button next to the sidebar.
 
 ## Changelog
 
