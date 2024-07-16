@@ -22,7 +22,7 @@ class Widget_Whiz
                 'id' => $id,
                 'name' => $sidebar['name'],
                 'description' => $sidebar['description'],
-                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'before_widget' => '<div id="%1$s" class="widget %2$s ' . $id . '">',
                 'after_widget' => '</div>',
                 'before_title' => '<h6 class="side-title">',
                 'after_title' => '</h6>',
