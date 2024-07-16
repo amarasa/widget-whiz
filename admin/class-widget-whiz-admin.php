@@ -11,7 +11,7 @@ class Widget_Whiz_Admin
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-        add_action('wp_ajax_import_sidebars', array($this, 'ajax_import_sidebars'));
+        add_action('admin_post_add_new_sidebar', array($this, 'add_new_sidebar'));
         add_action('wp_ajax_delete_sidebar', array($this, 'ajax_delete_sidebar'));
     }
 
@@ -47,15 +47,13 @@ class Widget_Whiz_Admin
     public function create_admin_page()
     {
         $sidebars = get_option('widget_whiz_sidebars', array());
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
 
 ?>
         <div class="wrap">
             <h1>Widget Whiz</h1>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields('widget_whiz_group');
-                ?>
+            <form method="post" action="admin-post.php">
+                <input type="hidden" name="action" value="add_new_sidebar">
+                <?php wp_nonce_field('widget_whiz_add_sidebar', 'widget_whiz_add_sidebar_nonce'); ?>
                 <h2>Add New Sidebar</h2>
                 <table class="form-table">
                     <tr valign="top">
@@ -93,76 +91,43 @@ class Widget_Whiz_Admin
                 </table>
                 <?php submit_button('Save Changes'); ?>
             </form>
-
-            <?php if (!empty($deleted_sidebars)) : ?>
-                <h2>Inactive Sidebars</h2>
-                <form id="widget-whiz-reactivate-form">
-                    <ul>
-                        <?php foreach ($deleted_sidebars as $sidebar) : ?>
-                            <li>
-                                <?php echo esc_html($sidebar); ?>
-                                <button type="button" class="button button-secondary widget-whiz-reactivate-button" data-name="<?php echo esc_attr($sidebar); ?>">Reactivate</button>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </form>
-            <?php endif; ?>
         </div>
 <?php
     }
 
-    public function import_existing_sidebars()
+    public function add_new_sidebar()
     {
-        global $wp_registered_sidebars;
-        $widget_whiz_sidebars = get_option('widget_whiz_sidebars', array());
+        check_admin_referer('widget_whiz_add_sidebar', 'widget_whiz_add_sidebar_nonce');
 
-        foreach ($wp_registered_sidebars as $sidebar_id => $sidebar) {
-            $exists = false;
-            foreach ($widget_whiz_sidebars as $widget_whiz_sidebar) {
-                if ($widget_whiz_sidebar['name'] == $sidebar['name']) {
-                    $exists = true;
-                    break;
-                }
+        if (isset($_POST['widget_whiz_sidebars']['new'])) {
+            $new_sidebar = $_POST['widget_whiz_sidebars']['new'];
+            $sidebars = get_option('widget_whiz_sidebars', array());
+
+            if (!is_array($sidebars)) {
+                $sidebars = array();
             }
 
-            if (!$exists) {
-                $widget_whiz_sidebars[] = array(
-                    'name' => $sidebar['name'],
-                    'description' => $sidebar['description'],
-                );
-            }
-        }
+            $new_sidebar = array(
+                'name' => sanitize_text_field($new_sidebar['name']),
+                'description' => sanitize_textarea_field($new_sidebar['description']),
+            );
 
-        update_option('widget_whiz_sidebars', $widget_whiz_sidebars);
-
-        return !empty($widget_whiz_sidebars);
-    }
-
-    public function ajax_import_sidebars()
-    {
-        check_ajax_referer('widget_whiz_nonce', 'nonce');
-
-        $result = $this->import_existing_sidebars();
-        if ($result) {
-            wp_send_json_success();
-        } else {
-            wp_send_json_error();
-        }
-    }
-
-    public function ajax_delete_sidebar()
-    {
-        check_ajax_referer('widget_whiz_nonce', 'nonce');
-
-        $key = sanitize_text_field($_POST['key']);
-        $sidebars = get_option('widget_whiz_sidebars', array());
-
-        if (isset($sidebars[$key])) {
-            unset($sidebars[$key]);
+            $sidebars[] = $new_sidebar;
             update_option('widget_whiz_sidebars', $sidebars);
-            wp_send_json_success();
-        } else {
-            wp_send_json_error();
+
+            // Register the new sidebar immediately
+            register_sidebar(array(
+                'id' => sanitize_title($new_sidebar['name']),
+                'name' => $new_sidebar['name'],
+                'description' => $new_sidebar['description'],
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget' => '</div>',
+                'before_title' => '<h6 class="side-title">',
+                'after_title' => '</h6>',
+            ));
+
+            wp_redirect(admin_url('admin.php?page=widget-whiz'));
+            exit;
         }
     }
 
@@ -175,5 +140,22 @@ class Widget_Whiz_Admin
         ));
 
         wp_enqueue_style('widget-whiz-css', plugin_dir_url(__FILE__) . '../assets/css/widget-whiz.css');
+    }
+
+    public function ajax_delete_sidebar()
+    {
+        check_ajax_referer('widget_whiz_nonce', 'nonce');
+
+        $key = sanitize_text_field($_POST['key']);
+        $sidebars = get_option('widget_whiz_sidebars', array());
+
+        if (isset($sidebars[$key])) {
+            unset($sidebars[$key]);
+            update_option('widget_whiz_sidebars', $sidebars);
+
+            wp_send_json_success();
+        } else {
+            wp_send_json_error();
+        }
     }
 }
