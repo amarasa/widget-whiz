@@ -13,7 +13,6 @@ class Widget_Whiz_Admin
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_ajax_import_sidebars', array($this, 'ajax_import_sidebars'));
         add_action('wp_ajax_delete_sidebar', array($this, 'ajax_delete_sidebar'));
-        add_action('wp_ajax_reactivate_sidebar', array($this, 'ajax_reactivate_sidebar'));
     }
 
     public function add_admin_menu()
@@ -31,7 +30,6 @@ class Widget_Whiz_Admin
     public function register_settings()
     {
         register_setting('widget_whiz_group', 'widget_whiz_sidebars', array($this, 'sanitize_sidebars'));
-        register_setting('widget_whiz_group', 'widget_whiz_deleted_sidebars');
     }
 
     public function sanitize_sidebars($input)
@@ -50,7 +48,6 @@ class Widget_Whiz_Admin
     {
         global $wp_registered_sidebars;
         $sidebars = get_option('widget_whiz_sidebars', array());
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
 
         // Check for existing sidebars that haven't been imported yet.
         $unimported_sidebars = array();
@@ -62,7 +59,7 @@ class Widget_Whiz_Admin
                     break;
                 }
             }
-            if (!$exists && !in_array($sidebar['name'], $deleted_sidebars)) {
+            if (!$exists) {
                 $unimported_sidebars[] = $sidebar;
             }
         }
@@ -122,20 +119,6 @@ class Widget_Whiz_Admin
                 </table>
                 <?php submit_button('Save Changes'); ?>
             </form>
-
-            <?php if (!empty($deleted_sidebars)) : ?>
-                <h2>Inactive Sidebars</h2>
-                <form id="widget-whiz-reactivate-form">
-                    <ul>
-                        <?php foreach ($deleted_sidebars as $sidebar) : ?>
-                            <li>
-                                <?php echo esc_html($sidebar); ?>
-                                <button type="button" class="button button-secondary widget-whiz-reactivate-button" data-name="<?php echo esc_attr($sidebar); ?>">Reactivate</button>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </form>
-            <?php endif; ?>
         </div>
 <?php
     }
@@ -144,7 +127,6 @@ class Widget_Whiz_Admin
     {
         global $wp_registered_sidebars;
         $widget_whiz_sidebars = get_option('widget_whiz_sidebars', array());
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
 
         foreach ($wp_registered_sidebars as $sidebar_id => $sidebar) {
             $exists = false;
@@ -155,7 +137,7 @@ class Widget_Whiz_Admin
                 }
             }
 
-            if (!$exists && !in_array($sidebar['name'], $deleted_sidebars)) {
+            if (!$exists) {
                 $widget_whiz_sidebars[] = array(
                     'name' => $sidebar['name'],
                     'description' => $sidebar['description'],
@@ -185,35 +167,11 @@ class Widget_Whiz_Admin
         check_ajax_referer('widget_whiz_nonce', 'nonce');
 
         $key = sanitize_text_field($_POST['key']);
-        $name = sanitize_text_field($_POST['name']);
         $sidebars = get_option('widget_whiz_sidebars', array());
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
 
         if (isset($sidebars[$key])) {
             unset($sidebars[$key]);
             update_option('widget_whiz_sidebars', $sidebars);
-
-            if (!in_array($name, $deleted_sidebars)) {
-                $deleted_sidebars[] = $name;
-                update_option('widget_whiz_deleted_sidebars', $deleted_sidebars);
-            }
-
-            wp_send_json_success();
-        } else {
-            wp_send_json_error();
-        }
-    }
-
-    public function ajax_reactivate_sidebar()
-    {
-        check_ajax_referer('widget_whiz_nonce', 'nonce');
-
-        $name = sanitize_text_field($_POST['name']);
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
-
-        if (($key = array_search($name, $deleted_sidebars)) !== false) {
-            unset($deleted_sidebars[$key]);
-            update_option('widget_whiz_deleted_sidebars', $deleted_sidebars);
             wp_send_json_success();
         } else {
             wp_send_json_error();

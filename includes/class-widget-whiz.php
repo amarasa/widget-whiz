@@ -9,7 +9,6 @@ class Widget_Whiz
     public function __construct()
     {
         add_action('widgets_init', array($this, 'register_dynamic_sidebars'));
-        add_action('widgets_init', array($this, 'unregister_deleted_sidebars'), 100);
     }
 
     public function register_dynamic_sidebars()
@@ -28,18 +27,6 @@ class Widget_Whiz
                 'before_title' => '<h6 class="side-title">',
                 'after_title' => '</h6>',
             ));
-        }
-    }
-
-    public function unregister_deleted_sidebars()
-    {
-        global $wp_registered_sidebars;
-        $deleted_sidebars = get_option('widget_whiz_deleted_sidebars', array());
-
-        foreach ($wp_registered_sidebars as $sidebar_id => $sidebar) {
-            if (in_array($sidebar['name'], $deleted_sidebars)) {
-                unregister_sidebar($sidebar_id);
-            }
         }
     }
 }
