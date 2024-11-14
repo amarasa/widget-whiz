@@ -10,6 +10,9 @@ class Widget_Whiz_Admin
     {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('admin_post_add_new_sidebar', array($this, 'add_new_sidebar'));
+        add_action('wp_ajax_delete_sidebar', array($this, 'ajax_delete_sidebar'));
         add_action('add_meta_boxes', array($this, 'add_sidebar_meta_box'));
         add_action('save_post', array($this, 'save_sidebar_meta_box'));
     }
@@ -92,6 +95,70 @@ class Widget_Whiz_Admin
             </form>
         </div>
 <?php
+    }
+
+    public function add_new_sidebar()
+    {
+        check_admin_referer('widget_whiz_add_sidebar', 'widget_whiz_add_sidebar_nonce');
+
+        if (isset($_POST['widget_whiz_sidebars']['new'])) {
+            $new_sidebar = $_POST['widget_whiz_sidebars']['new'];
+            $sidebars = get_option('widget_whiz_sidebars', array());
+
+            if (!is_array($sidebars)) {
+                $sidebars = array();
+            }
+
+            $new_sidebar = array(
+                'name' => sanitize_text_field($new_sidebar['name']),
+                'description' => sanitize_textarea_field($new_sidebar['description']),
+            );
+
+            $sidebars[] = $new_sidebar;
+            update_option('widget_whiz_sidebars', $sidebars);
+
+            // Register the new sidebar immediately
+            register_sidebar(array(
+                'id' => sanitize_title($new_sidebar['name']),
+                'name' => $new_sidebar['name'],
+                'description' => $new_sidebar['description'],
+                'before_widget' => '<div id="%1$s" class="widget %2$s">',
+                'after_widget' => '</div>',
+                'before_title' => '<h6 class="side-title">',
+                'after_title' => '</h6>',
+            ));
+
+            wp_redirect(admin_url('admin.php?page=widget-whiz'));
+            exit;
+        }
+    }
+
+    public function enqueue_admin_scripts()
+    {
+        wp_enqueue_script('widget-whiz-js', plugin_dir_url(__FILE__) . '../assets/js/widget-whiz.js', array('jquery'), '1.0.0', true);
+        wp_localize_script('widget-whiz-js', 'WidgetWhiz', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce'    => wp_create_nonce('widget_whiz_nonce'),
+        ));
+
+        wp_enqueue_style('widget-whiz-css', plugin_dir_url(__FILE__) . '../assets/css/widget-whiz.css');
+    }
+
+    public function ajax_delete_sidebar()
+    {
+        check_ajax_referer('widget_whiz_nonce', 'nonce');
+
+        $key = sanitize_text_field($_POST['key']);
+        $sidebars = get_option('widget_whiz_sidebars', array());
+
+        if (isset($sidebars[$key])) {
+            unset($sidebars[$key]);
+            update_option('widget_whiz_sidebars', $sidebars);
+
+            wp_send_json_success();
+        } else {
+            wp_send_json_error();
+        }
     }
 
     // Meta box for sidebar selector
