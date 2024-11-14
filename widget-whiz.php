@@ -2,7 +2,7 @@
 /*
 Plugin Name: Widget Whiz
 Description: Easily manage sidebars from the WordPress dashboard.
-Version: 1.0.4
+Version: 1.0.5
 Plugin URI: https://github.com/amarasa/widget-whiz
 Author: Angelo Marasa
 */
