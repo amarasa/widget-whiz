@@ -45,7 +45,53 @@ class Widget_Whiz_Admin
 
     public function create_admin_page()
     {
-        // Your existing admin page code here.
+        $sidebars = get_option('widget_whiz_sidebars', array());
+
+?>
+        <div class="wrap">
+            <h1>Widget Whiz</h1>
+            <form method="post" action="admin-post.php">
+                <input type="hidden" name="action" value="add_new_sidebar">
+                <?php wp_nonce_field('widget_whiz_add_sidebar', 'widget_whiz_add_sidebar_nonce'); ?>
+                <h2>Add New Sidebar</h2>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">Name</th>
+                        <td>
+                            <input type="text" name="widget_whiz_sidebars[new][name]" required />
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Description</th>
+                        <td>
+                            <textarea name="widget_whiz_sidebars[new][description]"></textarea>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button('Add Sidebar'); ?>
+            </form>
+
+            <h2>Existing Sidebars</h2>
+            <form id="widget-whiz-sidebars-form" method="post" action="options.php">
+                <?php settings_fields('widget_whiz_group'); ?>
+                <table class="form-table" id="widget-whiz-sidebars-list">
+                    <?php foreach ($sidebars as $key => $sidebar) : ?>
+                        <tr valign="top" data-key="<?php echo esc_attr($key); ?>">
+                            <th scope="row"><?php echo esc_html($sidebar['name']); ?></th>
+                            <td>
+                                <textarea name="widget_whiz_sidebars[<?php echo esc_attr($key); ?>][description]"><?php echo esc_textarea($sidebar['description']); ?></textarea>
+                            </td>
+                            <td>
+                                <input type="hidden" name="widget_whiz_sidebars[<?php echo esc_attr($key); ?>][name]" value="<?php echo esc_attr($sidebar['name']); ?>" />
+                                <button type="button" class="button button-secondary widget-whiz-delete-button">Delete</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+                <?php submit_button('Save Changes'); ?>
+            </form>
+        </div>
+<?php
     }
 
     // Meta box for sidebar selector
