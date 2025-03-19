@@ -164,15 +164,20 @@ class Widget_Whiz_Admin
     // Meta box for sidebar selector
     public function add_sidebar_meta_box()
     {
-        add_meta_box(
-            'widget_whiz_sidebar_selector',
-            __('Sidebar Selector', 'widget-whiz'),
-            array($this, 'render_sidebar_meta_box'),
-            array('post', 'page'),
-            'side',
-            'high'
-        );
+        $post_types = get_post_types(array('public' => true), 'names');
+    
+        foreach ($post_types as $post_type) {
+            add_meta_box(
+                'widget_whiz_sidebar_selector',
+                __('Sidebar Selector', 'widget-whiz'),
+                array($this, 'render_sidebar_meta_box'),
+                $post_type,
+                'side',
+                'high'
+            );
+        }
     }
+
 
     public function render_sidebar_meta_box($post)
     {
